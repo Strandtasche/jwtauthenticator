@@ -48,6 +48,7 @@ class JSONWebTokenLoginHandler(BaseHandler):
 
         username = self.retrieve_username(claims, username_claim_field)
         user = self.user_from_username(username)
+        user = self.update_admin_status(claims, user)
         self.set_login_cookie(user)
 
         _url = url_path_join(self.hub.server.base_url, 'home')
@@ -56,6 +57,15 @@ class JSONWebTokenLoginHandler(BaseHandler):
              _url = next_url
 
         self.redirect(_url)
+
+    def update_admin_status(self, claims, user):
+        '''ensures that admin status of user is identical with keycloak admin status'''
+        kat_admin_role = 'katana-admin' in claims['realm_access']['roles']
+        if user.admin != kat_admin_role:
+            user.admin = kat_admin_role
+            self.db.commit()
+
+        return user
 
     @staticmethod
     def verify_jwt_with_claims(token, signing_certificate, audience):
