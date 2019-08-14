@@ -1,0 +1,24 @@
+image: "python:3.6"
+
+stages:
+  - build
+  - publish
+
+before_script:
+  - python -V                                   # Print out python version for debugging
+  - . ci-scripts/setup-python-env.sh
+  - pip install twine
+
+python build:
+  stage: build
+  artifacts:
+    paths:
+      - dist/
+  script:
+  - pip install wheel
+  - python setup.py bdist_wheel
+
+python publish:
+  stage: publish
+  script:
+  - twine upload dist/*
